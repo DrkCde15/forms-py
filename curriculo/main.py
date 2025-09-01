@@ -11,13 +11,11 @@ import secrets
 import logging
 from datetime import datetime
 
-# Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-# Configurar API
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("Configure a variável de ambiente GEMINI_API_KEY")
@@ -26,18 +24,15 @@ genai.configure(api_key=api_key)
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(16))
 
-# Caminho do currículo base
 BASE_CURRICULO = r"C:\Users\Júlio César\Documents\Currículo\Currículo Stephanie Amarante - Área TI (1).docx"
 
 def verificar_arquivo_base():
-    """Verifica se o arquivo base existe"""
     if not os.path.exists(BASE_CURRICULO):
         logger.error(f"Arquivo base não encontrado: {BASE_CURRICULO}")
         return False
     return True
 
 def carregar_curriculo_base():
-    """Lê o currículo base e retorna o texto"""
     try:
         if not verificar_arquivo_base():
             raise FileNotFoundError("Arquivo base do currículo não encontrado")
@@ -54,7 +49,6 @@ def carregar_curriculo_base():
         raise
 
 def validar_dados_entrada(nome, resumo, objetivo):
-    """Valida os dados de entrada"""
     erros = []
     
     if not nome or len(nome.strip()) < 2:
@@ -66,17 +60,14 @@ def validar_dados_entrada(nome, resumo, objetivo):
     if not objetivo or len(objetivo.strip()) < 10:
         erros.append("Objetivo profissional deve ter pelo menos 10 caracteres")
     
-    # Verificar se não são apenas espaços ou caracteres especiais
     if nome and not any(c.isalpha() for c in nome):
         erros.append("Nome deve conter pelo menos uma letra")
     
     return erros
 
 def criar_documento_formatado(texto_gerado, nome):
-    """Cria um documento Word com formatação adequada"""
     novo_doc = Document()
     
-    # Configurar margens
     sections = novo_doc.sections
     for section in sections:
         section.top_margin = Inches(1)
@@ -92,7 +83,6 @@ def criar_documento_formatado(texto_gerado, nome):
         if not linha:
             continue
             
-        # Nome principal (primeira linha significativa)
         if primeira_linha and nome.upper() in linha.upper():
             p = novo_doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -101,38 +91,31 @@ def criar_documento_formatado(texto_gerado, nome):
             run.font.size = Inches(0.2)
             primeira_linha = False
             
-        # Seções principais (títulos)
         elif any(x in linha.upper() for x in ["RESUMO", "OBJETIVO", "EXPERIÊNCIA", "FORMAÇÃO", "HABILIDADES", "CONTATO"]) and len(linha) < 50:
             p = novo_doc.add_paragraph()
-            p.add_run().add_break()  # Espaço antes da seção
+            p.add_run().add_break()
             run = p.add_run(linha)
             run.bold = True
             run.underline = True
             
-        # Texto em maiúsculas (subtítulos)
         elif linha.isupper() and len(linha) < 80:
             p = novo_doc.add_paragraph()
             run = p.add_run(linha)
             run.bold = True
-            
-        # Texto normal
+
         else:
             novo_doc.add_paragraph(linha)
     
     return novo_doc
 
 def gerar_curriculo_arquivo(nome, resumo, objetivo, experiencias="", educacao="", habilidades="", linkedin="", email="", github="", idiomas=""):
-    """Gera arquivo de currículo personalizado"""
     try:
-        # Validar dados obrigatórios
         erros = validar_dados_entrada(nome, resumo, objetivo)
         if erros:
             raise ValueError("; ".join(erros))
 
-        # Base da Stephanie
         doc_texto = carregar_curriculo_base()
 
-        # Prompt com todos os dados
         prompt = f"""
 Você é um especialista em RH e criação de currículos.
 
@@ -163,10 +146,8 @@ Instruções:
         response = model.generate_content(prompt)
         texto_final = response.text
 
-        # Criar documento formatado
         novo_doc = criar_documento_formatado(texto_final, nome)
 
-        # Salvar arquivos
         tmp_dir = tempfile.mkdtemp()
         nome_arquivo = nome.replace(' ', '_').replace('/', '_').replace('\\', '_')
         output_docx = os.path.join(tmp_dir, f"{nome_arquivo}_Curriculo.docx")
@@ -189,7 +170,6 @@ Instruções:
 
 @app.route("/")
 def index():
-    """Página principal"""
     return render_template("index.html")
 
 @app.route("/gerar_curriculo", methods=["POST"])
@@ -237,7 +217,6 @@ def gerar_curriculo_route():
 
 @app.route("/download_pdf")
 def download_pdf():
-    """Endpoint para download do PDF"""
     try:
         ultimo_curriculo = session.get('ultimo_curriculo')
         if not ultimo_curriculo or not ultimo_curriculo.get('pdf'):
@@ -259,13 +238,10 @@ def download_pdf():
 
 @app.route("/health")
 def health_check():
-    """Endpoint de verificação de saúde"""
     try:
-        # Verificar se o arquivo base existe
         if not verificar_arquivo_base():
             return jsonify({'status': 'error', 'message': 'Arquivo base não encontrado'}), 500
         
-        # Verificar API do Gemini
         model = genai.GenerativeModel("gemini-1.5-flash")
         test_response = model.generate_content("Test")
         
@@ -290,7 +266,6 @@ def internal_error(error):
     return jsonify({'error': 'Erro interno do servidor'}), 500
 
 if __name__ == "__main__":
-    # Verificações iniciais
     if not verificar_arquivo_base():
         print("AVISO: Arquivo base do currículo não encontrado!")
         print(f"Caminho esperado: {BASE_CURRICULO}")
