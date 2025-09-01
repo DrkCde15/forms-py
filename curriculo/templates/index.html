@@ -3,357 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Currículos IA</title>
+    <title>Gerador de Currículo com IA</title>
     <style>
-        * {
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
         }
 
         .container {
             max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 25px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 30px;
+        h1 {
             text-align: center;
+            color: #333;
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-
-        .form-container {
-            padding: 40px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 1.1em;
-        }
-
-        .required {
-            color: #e74c3c;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #ecf0f1;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #3498db;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .btn-group {
+        form {
             display: flex;
-            gap: 15px;
-            margin-top: 30px;
+            flex-direction: column;
         }
 
-        .btn {
-            flex: 1;
-            padding: 15px 30px;
+        label {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"], textarea, select {
+            margin-top: 5px;
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        input[type="file"] {
+            margin-top: 10px;
+        }
+
+        .buttons {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: #145ba7ff;
+            flex: 1;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
+        .btn-generate {
+            background-color: #28a745;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+        .btn-clear {
+            background-color: #dc3545;
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(149, 165, 166, 0.3);
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .alert-error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-        }
-
-        .helper-text {
-            font-size: 0.9em;
-            color: #7f8c8d;
-            margin-top: 5px;
-            font-style: italic;
-        }
-
-        .char-counter {
-            text-align: right;
-            font-size: 0.8em;
-            color: #95a5a6;
-            margin-top: 5px;
+        .required-note {
+            color: red;
+            margin-top: 10px;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🚀 Gerador de Currículos IA</h1>
-            <p>Crie currículos profissionais personalizados com inteligência artificial</p>
-        </div>
+        <h1>Gerador de Currículo com IA</h1>
+        <form id="resumeForm" enctype="multipart/form-data">
+            <label for="nome">Nome Completo*:</label>
+            <input type="text" id="nome" name="nome" required>
 
-        <div class="form-container">
-            <div class="alert alert-error" id="errorAlert"></div>
-            <div class="alert alert-success" id="successAlert"></div>
+            <label for="resumo">Resumo Profissional*:</label>
+            <textarea id="resumo" name="resumo" rows="4" required></textarea>
 
-            <form id="curriculoForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="nome">Nome Completo <span class="required">*</span></label>
-                    <input type="text" id="nome" name="nome" required maxlength="100">
-                    <div class="helper-text">Digite seu nome completo como deve aparecer no currículo</div>
+            <label for="objetivo">Objetivo Profissional*:</label>
+            <textarea id="objetivo" name="objetivo" rows="3" required></textarea>
+
+            <label for="experiencias">Experiências Profissionais:</label>
+            <textarea id="experiencias" name="experiencias" rows="6"></textarea>
+
+            <label for="educacao">Formação Acadêmica:</label>
+            <textarea id="educacao" name="educacao" rows="3"></textarea>
+
+            <label for="habilidades">Habilidades/Competências:</label>
+            <textarea id="habilidades" name="habilidades" rows="3"></textarea>
+
+            <label for="linkedin">LinkedIn:</label>
+            <input type="text" id="linkedin" name="linkedin">
+
+            <label for="github">GitHub:</label>
+            <input type="text" id="github" name="github">
+
+            <label for="documento">Anexar currículo base (opcional):</label>
+            <input type="file" id="documento" name="documento" accept=".docx,.pdf">
+
+            <label for="idiomas">Idiomas:</label>
+            <div id="idiomas">
+                <div class="idioma">
+                    <input type="text" name="idioma_nome[]" placeholder="Ex: Inglês">
+                    <select name="idioma_nivel[]">
+                        <option value="Básico">Básico</option>
+                        <option value="Intermediário">Intermediário</option>
+                        <option value="Avançado">Avançado</option>
+                        <option value="Nativo">Nativo</option>
+                    </select>
                 </div>
-
-                <div class="form-group">
-                    <label for="resumo">Resumo Profissional <span class="required">*</span></label>
-                    <textarea id="resumo" name="resumo" required maxlength="500" 
-                              placeholder="Descreva brevemente seu perfil profissional, principais qualidades e experiências..."></textarea>
-                    <div class="char-counter"><span id="resumoCount">0</span>/500 caracteres</div>
-                    <div class="helper-text">Um resumo impactante do seu perfil profissional</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="objetivo">Objetivo Profissional <span class="required">*</span></label>
-                    <textarea id="objetivo" name="objetivo" required maxlength="300"
-                              placeholder="Descreva que tipo de posição você busca e seus objetivos de carreira..."></textarea>
-                    <div class="char-counter"><span id="objetivoCount">0</span>/300 caracteres</div>
-                    <div class="helper-text">Seus objetivos e aspirações profissionais</div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="experiencias">Experiências Profissionais</label>
-                        <textarea id="experiencias" name="experiencias" maxlength="800"
-                                  placeholder="Liste suas experiências profissionais relevantes..."></textarea>
-                        <div class="char-counter"><span id="experienciasCount">0</span>/800 caracteres</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="educacao">Formação Acadêmica</label>
-                        <textarea id="educacao" name="educacao" maxlength="400"
-                                  placeholder="Cursos, graduações, especializações..."></textarea>
-                        <div class="char-counter"><span id="educacaoCount">0</span>/400 caracteres</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="habilidades">Habilidades e Competências</label>
-                    <textarea id="habilidades" name="habilidades" maxlength="400"
-                              placeholder="Liste suas principais habilidades técnicas e comportamentais..."></textarea>
-                    <div class="char-counter"><span id="habilidadesCount">0</span>/400 caracteres</div>
-                </div>
-
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">
-                        📄 Gerar Currículo
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
-                        🔄 Limpar Formulário
-                    </button>
-                </div>
-            </form>
-
-            <div class="loading" id="loading">
-                <div class="loading-spinner"></div>
-                <p>Gerando seu currículo personalizado...</p>
             </div>
-        </div>
+            <button type="button" onclick="adicionarIdioma()">+ Adicionar outro idioma</button>
+
+            <div class="buttons">
+                <button type="submit" class="btn-generate">Gerar Currículo</button>
+                <button type="button" class="btn-clear" onclick="document.getElementById('resumeForm').reset();">Limpar</button>
+            </div>
+            <div class="required-note">* Campos obrigatórios</div>
+        </form>
     </div>
 
     <script>
-        // Contadores de caracteres
-        function setupCharCounters() {
-            const fields = ['resumo', 'objetivo', 'experiencias', 'educacao', 'habilidades'];
-            
-            fields.forEach(field => {
-                const textarea = document.getElementById(field);
-                const counter = document.getElementById(field + 'Count');
-                
-                if (textarea && counter) {
-                    textarea.addEventListener('input', function() {
-                        counter.textContent = this.value.length;
-                    });
-                }
-            });
+        function adicionarIdioma() {
+            const div = document.createElement("div");
+            div.classList.add("idioma");
+            div.innerHTML = `
+                <input type="text" name="idioma_nome[]" placeholder="Ex: Espanhol">
+                <select name="idioma_nivel[]">
+                    <option value="Básico">Básico</option>
+                    <option value="Intermediário">Intermediário</option>
+                    <option value="Avançado">Avançado</option>
+                    <option value="Nativo">Nativo</option>
+                </select>
+            `;
+            document.getElementById("idiomas").appendChild(div);
         }
 
-        // Submissão do formulário
-        document.getElementById('curriculoForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Mostrar loading
-            document.getElementById('loading').style.display = 'block';
-            this.style.display = 'none';
-            
-            // Criar FormData
-            const formData = new FormData(this);
-            
-            // Fazer request
-            fetch('/gerar_curriculo', {
-                method: 'POST',
+        document.getElementById("resumeForm").addEventListener("submit", function(event){
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch("/gerar_curriculo", {
+                method: "POST",
                 body: formData
             })
             .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => Promise.reject(err));
-                }
+                if (!response.ok) throw new Error("Erro ao gerar currículo");
                 return response.blob();
             })
             .then(blob => {
-                // Download do arquivo
                 const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
+                const a = document.createElement("a");
                 a.href = url;
-                a.download = `${document.getElementById('nome').value.replace(' ', '_')}_Curriculo.docx`;
+                a.download = "Curriculo.pdf"; // agora baixa PDF direto
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
-                
-                showAlert('Currículo gerado com sucesso! O download começou automaticamente.', 'success');
+                a.remove();
             })
-            .catch(error => {
-                console.error('Erro:', error);
-                showAlert(error.error || 'Erro ao gerar currículo. Tente novamente.', 'error');
-            })
-            .finally(() => {
-                // Esconder loading
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('curriculoForm').style.display = 'block';
-            });
-        });
-
-        function showAlert(message, type) {
-            const alertElement = document.getElementById(type === 'error' ? 'errorAlert' : 'successAlert');
-            alertElement.textContent = message;
-            alertElement.style.display = 'block';
-            
-            setTimeout(() => {
-                alertElement.style.display = 'none';
-            }, 5000);
-        }
-
-        function limparFormulario() {
-            document.getElementById('curriculoForm').reset();
-            setupCharCounters(); // Reset counters
-            
-            // Esconder alertas
-            document.getElementById('errorAlert').style.display = 'none';
-            document.getElementById('successAlert').style.display = 'none';
-        }
-
-        // Inicializar contadores
-        document.addEventListener('DOMContentLoaded', function() {
-            setupCharCounters();
+            .catch(err => alert(err.message));
         });
     </script>
 </body>

@@ -121,44 +121,41 @@ def criar_documento_formatado(texto_gerado, nome):
     
     return novo_doc
 
-def gerar_curriculo_arquivo(nome, resumo, objetivo, experiencias="", educacao="", habilidades=""):
+def gerar_curriculo_arquivo(nome, resumo, objetivo, experiencias="", educacao="", habilidades="", linkedin="", github="", idiomas=""):
     """Gera arquivo de currículo personalizado"""
     try:
-        # Validar dados
+        # Validar dados obrigatórios
         erros = validar_dados_entrada(nome, resumo, objetivo)
         if erros:
             raise ValueError("; ".join(erros))
-        
-        # Carregar base
+
+        # Base da Stephanie
         doc_texto = carregar_curriculo_base()
 
-        # Prompt melhorado
+        # Prompt com todos os dados
         prompt = f"""
-Você é um especialista em recursos humanos e criação de currículos profissionais.
+Você é um especialista em RH e criação de currículos.
 
-IMPORTANTE: Crie um currículo COMPLETO e PROFISSIONAL baseado na estrutura do documento de referência.
-
-DOCUMENTO DE REFERÊNCIA (use como modelo de estrutura e estilo):
+Use o documento de referência como modelo de estilo:
 {doc_texto}
 
-DADOS PARA O NOVO CURRÍCULO:
+Crie um currículo completo para o usuário com os seguintes dados:
+
 - Nome: {nome}
 - Resumo Profissional: {resumo}
 - Objetivo Profissional: {objetivo}
-- Experiências: {experiencias if experiencias else "Busco oportunidades para aplicar meus conhecimentos e desenvolver novas competências"}
-- Formação: {educacao if educacao else "Graduação em andamento ou completa"}
-- Habilidades: {habilidades if habilidades else "Comunicação efetiva, trabalho em equipe, adaptabilidade, resolução de problemas"}
+- Experiências: {experiencias if experiencias else "A definir"}
+- Formação: {educacao if educacao else "A informar"}
+- Habilidades: {habilidades if habilidades else "Versatilidade e aprendizado contínuo"}
+- LinkedIn: {linkedin if linkedin else "Não informado"}
+- GitHub: {github if github else "Não informado"}
+- Idiomas: {idiomas if idiomas else "Não informado"}
 
-INSTRUÇÕES:
-1. Mantenha a mesma estrutura do documento de referência
-2. Use formatação clara com seções bem definidas
-3. Seja profissional e objetivo
-4. Inclua informações de contato fictícias mas realistas (email, telefone, LinkedIn)
-5. O currículo deve ter entre 400-800 palavras
-6. Use linguagem formal e persuasiva
-7. Destaque conquistas e resultados quando possível
-
-Gere APENAS o texto do currículo, sem comentários adicionais.
+Instruções:
+1. Mantenha a estrutura clara e profissional
+2. Inclua seções bem definidas
+3. Use linguagem formal e objetiva
+4. Currículo entre 400-800 palavras
 """
 
         model = genai.GenerativeModel("gemini-1.5-flash")
@@ -175,11 +172,9 @@ Gere APENAS o texto do currículo, sem comentários adicionais.
         output_pdf = os.path.join(tmp_dir, f"{nome_arquivo}_Curriculo.pdf")
 
         novo_doc.save(output_docx)
-        
-        # Tentar converter para PDF
+
         try:
             convert(output_docx, output_pdf)
-            logger.info(f"PDF gerado com sucesso: {output_pdf}")
         except Exception as pdf_error:
             logger.warning(f"Erro na conversão para PDF: {pdf_error}")
             output_pdf = None
@@ -190,6 +185,7 @@ Gere APENAS o texto do currículo, sem comentários adicionais.
         logger.error(f"Erro na geração do currículo: {e}")
         raise
 
+
 @app.route("/")
 def index():
     """Página principal"""
@@ -197,49 +193,45 @@ def index():
 
 @app.route("/gerar_curriculo", methods=["POST"])
 def gerar_curriculo_route():
-    """Endpoint para gerar currículo"""
     try:
-        # Extrair dados do formulário
+        idiomas_nomes = request.form.getlist("idioma_nome[]")
+        idiomas_niveis = request.form.getlist("idioma_nivel[]")
+        idiomas = [f"{nome} ({nivel})" for nome, nivel in zip(idiomas_nomes, idiomas_niveis) if nome.strip()]
+
         dados = {
             'nome': request.form.get("nome", "").strip(),
             'resumo': request.form.get("resumo", "").strip(),
             'objetivo': request.form.get("objetivo", "").strip(),
             'experiencias': request.form.get("experiencias", "").strip(),
             'educacao': request.form.get("educacao", "").strip(),
-            'habilidades': request.form.get("habilidades", "").strip()
+            'habilidades': request.form.get("habilidades", "").strip(),
+            'linkedin': request.form.get("linkedin", "").strip(),
+            'github': request.form.get("github", "").strip(),
+            'idiomas': ", ".join(idiomas),
         }
-        
-        # Verificar campos obrigatórios
-        if not all([dados['nome'], dados['resumo'], dados['objetivo']]):
-            return jsonify({
-                'error': 'Preencha todos os campos obrigatórios: Nome, Resumo Profissional e Objetivo!'
-            }), 400
 
-        # Gerar currículo
         docx_path, pdf_path = gerar_curriculo_arquivo(**dados)
-        
-        # Armazenar caminhos na sessão para downloads posteriores
-        session['ultimo_curriculo'] = {
-            'docx': docx_path,
-            'pdf': pdf_path,
-            'nome': dados['nome']
-        }
-        
-        logger.info(f"Currículo gerado para: {dados['nome']}")
-        
-        # Retornar arquivo DOCX
-        return send_file(
-            docx_path, 
-            as_attachment=True,
-            download_name=f"{dados['nome'].replace(' ', '_')}_Curriculo.docx"
-        )
-        
+
+        if pdf_path and os.path.exists(pdf_path):
+            return send_file(
+                pdf_path,
+                as_attachment=True,
+                download_name=f"{dados['nome'].replace(' ', '_')}_Curriculo.pdf"
+            )
+        else:
+            return send_file(
+                docx_path,
+                as_attachment=True,
+                download_name=f"{dados['nome'].replace(' ', '_')}_Curriculo.docx"
+            )
+
     except ValueError as ve:
         logger.warning(f"Erro de validação: {ve}")
         return jsonify({'error': str(ve)}), 400
     except Exception as e:
         logger.error(f"Erro interno: {e}")
         return jsonify({'error': 'Erro interno do servidor. Tente novamente.'}), 500
+
 
 @app.route("/download_pdf")
 def download_pdf():
