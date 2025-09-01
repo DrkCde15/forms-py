@@ -121,7 +121,7 @@ def criar_documento_formatado(texto_gerado, nome):
     
     return novo_doc
 
-def gerar_curriculo_arquivo(nome, resumo, objetivo, experiencias="", educacao="", habilidades="", linkedin="", github="", idiomas=""):
+def gerar_curriculo_arquivo(nome, resumo, objetivo, experiencias="", educacao="", habilidades="", linkedin="", email="", github="", idiomas=""):
     """Gera arquivo de currículo personalizado"""
     try:
         # Validar dados obrigatórios
@@ -148,6 +148,7 @@ Crie um currículo completo para o usuário com os seguintes dados:
 - Formação: {educacao if educacao else "A informar"}
 - Habilidades: {habilidades if habilidades else "Versatilidade e aprendizado contínuo"}
 - LinkedIn: {linkedin if linkedin else "Não informado"}
+- Email: {email if email else "Não informado"}
 - GitHub: {github if github else "Não informado"}
 - Idiomas: {idiomas if idiomas else "Não informado"}
 
@@ -206,6 +207,7 @@ def gerar_curriculo_route():
             'educacao': request.form.get("educacao", "").strip(),
             'habilidades': request.form.get("habilidades", "").strip(),
             'linkedin': request.form.get("linkedin", "").strip(),
+            'email': request.form.get("email", "").strip(),
             'github': request.form.get("github", "").strip(),
             'idiomas': ", ".join(idiomas),
         }
