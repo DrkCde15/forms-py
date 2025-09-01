@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_file, jsonify
+from flask import Flask, request, render_template, send_file
 from docx import Document
 from docx2pdf import convert
 import google.generativeai as genai
@@ -16,15 +16,30 @@ genai.configure(api_key=api_key)
 
 app = Flask(__name__)
 
+# Caminho do currículo base (Stephanie)
+BASE_CURRICULO = r"C:\Users\Júlio César\Documents\Currículo\Currículo Stephanie Amarante - Área TI (1).docx"
+
+def carregar_curriculo_base():
+    """Lê o currículo base e retorna o texto"""
+    doc = Document(BASE_CURRICULO)
+    return "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
+
 def gerar_curriculo_arquivo(nome, resumo, objetivo, experiencias="", educacao="", habilidades=""):
+    doc_texto = carregar_curriculo_base()
+
     prompt = f"""
-Monte um currículo profissional em formato bem estruturado.
-Use seções claras com títulos em negrito e organize de forma limpa.
+Você é um assistente especialista em currículos.
+Use o seguinte documento como referência de estrutura, estilo e organização:
+
+DOCUMENTO BASE:
+{doc_texto}
+
+Agora crie um NOVO currículo com os dados abaixo, mantendo o mesmo estilo do documento base:
 
 Nome: {nome}
 Resumo Profissional: {resumo}
 Objetivo Profissional: {objetivo}
-Experiências: {experiencias if experiencias else "A definir conforme oportunidades"}
+Experiências: {experiencias if experiencias else "A definir"}
 Formação: {educacao if educacao else "A informar"}
 Habilidades: {habilidades if habilidades else "Versatilidade e capacidade de aprendizado"}
 """
@@ -45,7 +60,6 @@ Habilidades: {habilidades if habilidades else "Versatilidade e capacidade de apr
                 p = novo_doc.add_paragraph()
                 run = p.add_run(linha)
                 run.bold = True
-                run.font.size = 14
             else:
                 novo_doc.add_paragraph(linha)
 
@@ -61,12 +75,10 @@ Habilidades: {habilidades if habilidades else "Versatilidade e capacidade de apr
 
     return output_docx, output_pdf
 
-# Rota principal - renderiza o HTML
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# Rota para gerar currículo via POST
 @app.route("/gerar_curriculo", methods=["POST"])
 def gerar_curriculo_route():
     nome = request.form.get("nome", "").strip()

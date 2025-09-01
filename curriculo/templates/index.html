@@ -116,7 +116,27 @@
     <script>
         document.getElementById("resumeForm").addEventListener("submit", function(event){
             event.preventDefault();
-            alert("Aqui você integraria a chamada para a API Gemini para gerar o currículo.");
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch("/gerar_curriculo", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Erro ao gerar currículo");
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "Curriculo.docx";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            })
+            .catch(err => alert(err.message));
         });
     </script>
 </body>
